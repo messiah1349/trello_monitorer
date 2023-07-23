@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import logging
 logger = logging.getLogger(__name__)
 
@@ -14,15 +14,14 @@ class TrelloBoardLists:
     done_id: str
 
 
-cards_info_type = dict[str, dict[str, str]]
-
-
 @dataclass
 class Card:
     id: str
     name: str
     due: str
 
+
+cards_info_type = dict[str, dict[str, str]]
 
 @dataclass
 class TrelloCardsResponse:
@@ -41,9 +40,7 @@ class TrelloRequester:
     def _parse_lists_requests(response_text: str) -> list[Card]:
         return [Card(card['id'], card['name'], card['due']) for card in json.loads(response_text)]
 
-    def _get_cards_request(self, list_id: str) -> cards_info_type:
-
-        # logger.debug(f"{list_id=}")
+    def _get_cards_request(self, list_id: str) -> list[Card]:
         
         url = f"https://api.trello.com/1/lists/{list_id}/cards"
 
@@ -89,21 +86,31 @@ class TrelloRequester:
 
 
 class TrelloCardsChangeMonitorer(TrelloRequester):
-    """
-        doc
-    """
-    def __init__(self, trello_board_lists: TrelloBoardLists, api_key: str, token: str):
+    def __init__(self, 
+                    trello_board_lists: TrelloBoardLists, 
+                    api_key: str, 
+                    token: str,
+                    scheduler_host: str,
+                    scheduler_port: str):
         super().__init__(trello_board_lists, api_key, token)
         self.card_due_stance = {} #cards_info_type
+        self.scheduler_host = scheduler_host
+        self.scheduler_port = scheduler_port
+
+    def _send_request(self, card: Card, route: str, method: str, data: dict):
+        url = f'{self.scheduler_host}:{self.scheduler_port}{route}'
+        response = requests.request(method=method, url=url, json=data)
+        return response
 
     def _send_new_due_request(self, card: Card):
-        print(f'new due: {card}')
+        response = self._send_request(card, '/api/v1/add_task/', 
+                                      'POST', asdict(card))
+        logger.debug(f'send {card=}, {response.text=}')
 
-    def _send_new_active_card_request(self, card: Card):
-        print(f'new card: {card}')
-
-    def _delete_active_card(self, card: Card):
-        print(f"delete {card}")
+    def _delete_active_card_request(self, card: Card):
+        response = self._send_request(card, '/api/v1/delete_task/',
+                                    'DELETE', asdict(card))
+        logger.debug(f'delete {card=}, {response.text=}')
 
     def _proceed_active_exist_card(self, card: Card) -> None:
         stance_due = self.card_due_stance[card.id]['due']
@@ -113,11 +120,13 @@ class TrelloCardsChangeMonitorer(TrelloRequester):
 
     def _proceed_new_active_card(self, card: Card) -> None:
         self.card_due_stance[card.id] = {'name': card.name, 'due': card.due}
-        self._send_new_active_card_request(card)
+        if card.due is not None:
+            self._send_new_due_request(card)
 
     def _proceed_done_exist_card(self, card: Card) -> None:
         del self.card_due_stance[card.id]
-        self._delete_active_card(card)
+        if card.due is not None:
+            self._delete_active_card_request(card)
 
     def _get_update(self):
 
@@ -137,7 +146,7 @@ class TrelloCardsChangeMonitorer(TrelloRequester):
     def build(self):
         while True:
             print('startanuli!')
-            logger.debug(f"{self.card_due_stance=}")
+            # logger.debug(f"{self.card_due_stance=}")
             self._get_update()
             time.sleep(5)
 

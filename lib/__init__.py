@@ -1,5 +1,12 @@
 import logging
 import datetime
+from lib.trello_api_getter import TrelloCardsChangeMonitorer, TrelloBoardLists
+from lib.common.constants import (TASK_SCHEDULER_HOST,
+                                    TASK_SCHEDULER_PORT,
+                                    API_KEY,
+                                    TOKEN, 
+                                    lists
+                                )
 
 # clear handlers
 root_logger = logging.root
@@ -30,3 +37,7 @@ stderr_handler.setFormatter(formatter)
 root_module_logger.addHandler(stderr_handler)
 
 root_module_logger.info("Logging was inited")
+
+
+board_list = TrelloBoardLists(lists[0][0], lists[1][0], lists[2][0], lists[3][0])
+monitorer = TrelloCardsChangeMonitorer(board_list, API_KEY, TOKEN, TASK_SCHEDULER_HOST, TASK_SCHEDULER_PORT)
