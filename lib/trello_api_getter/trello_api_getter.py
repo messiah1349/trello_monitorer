@@ -92,6 +92,7 @@ class TrelloCardsChangeMonitorer(TrelloRequester):
                     token: str,
                     scheduler_host: str,
                     scheduler_port: str):
+                    
         super().__init__(trello_board_lists, api_key, token)
         self.card_due_stance = {} #cards_info_type
         self.scheduler_host = scheduler_host
@@ -145,7 +146,7 @@ class TrelloCardsChangeMonitorer(TrelloRequester):
 
     def build(self):
         while True:
-            print('startanuli!')
+            # print('startanuli!')
             # logger.debug(f"{self.card_due_stance=}")
             self._get_update()
             time.sleep(5)

@@ -38,6 +38,5 @@ root_module_logger.addHandler(stderr_handler)
 
 root_module_logger.info("Logging was inited")
 
-
 board_list = TrelloBoardLists(lists[0][0], lists[1][0], lists[2][0], lists[3][0])
 monitorer = TrelloCardsChangeMonitorer(board_list, API_KEY, TOKEN, TASK_SCHEDULER_HOST, TASK_SCHEDULER_PORT)

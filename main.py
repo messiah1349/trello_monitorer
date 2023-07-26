@@ -1,4 +1,4 @@
-import os
 from lib import monitorer
 
-monitorer.build()
+if __name__ == '__main__':
+    monitorer.build()

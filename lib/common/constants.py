@@ -1,7 +1,7 @@
 import os
 
 TASK_SCHEDULER_HOST = os.getenv('TASK_SCHEDULER_HOST', 'http://127.0.0.1')
-TASK_SCHEDULER_PORT = os.getenv('TASK_SCHEDULER_PORT', '5000')
+TASK_SCHEDULER_PORT = os.getenv('TASK_SCHEDULER_PORT', '5001')
 API_KEY = os.getenv('TRELLO_API', None)
 TOKEN = os.getenv('TRELLO_TOKEN', None)
 
